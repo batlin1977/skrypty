@@ -1,0 +1,56 @@
+#!/bin/bash
+
+
+# get current path
+reldir=`dirname $0`
+cd $reldir
+DIR=`pwd`
+
+# Colorize and add text parameters
+red=$(tput setaf 1)             #  red
+grn=$(tput setaf 2)             #  green
+cya=$(tput setaf 6)             #  cyan
+txtbld=$(tput bold)             # Bold
+bldred=${txtbld}$(tput setaf 1) #  red
+bldgrn=${txtbld}$(tput setaf 2) #  green
+bldblu=${txtbld}$(tput setaf 4) #  blue
+bldcya=${txtbld}$(tput setaf 6) #  cyan
+txtrst=$(tput sgr0)             # Reset
+
+# we don't allow scrollback buffer
+echo -e '\0033\0143'
+# clear
+
+echo -e "${cya}Building ${bldcya} OMNI ROM project ${txtrst}";
+
+# setup environment
+echo -e "${bldblu}Setting up environment ${txtrst}"
+export USE_CCACHE=1
+export CCACHE_DIR=~/android/cache/.omni
+# set ccache due to your disk space,set it at your own risk
+prebuilts/misc/linux-x86/ccache/ccache -M 10G
+. build/envsetup.sh
+
+add_lunch_combo omni_codina-user
+export PATH=${PATH}:~/bin
+export PATH=${PATH}:~/android-sdk/tools
+export PATH=${PATH}:~/android-sdk/platform-tools
+
+echo -e ""
+echo -e "${bldblu}Starting compilation ${txtrst}"
+
+# get time of startup
+res1=$(date +%s.%N)
+
+echo -e "${bldblu}brunching device ${txtrst}"
+brunch omni_codina-user -j4
+echo -e ""
+
+devhost -u judas77 -p upload ~/android/omni/out/target/product/codina/*HOMEMADE*.zip -f 36199 -d "None" -pb 0
+
+# finished? get elapsed time
+res2=$(date +%s.%N)
+echo "${bldgrn}Total time elapsed: ${txtrst}${grn}$(echo "($res2 - $res1) / 60"|bc ) minutes ($(echo "$res2 - $res1"|bc ) seconds) ${txtrst}"
+
+# make a alarm
+echo $'\a'

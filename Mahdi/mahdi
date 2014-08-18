@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# Import from paranoid
+# Edit By Xilence2210
+
+# get current path
+reldir=`dirname $0`
+cd $reldir
+DIR=`pwd`
+
+# Colorize and add text parameters
+red=$(tput setaf 1)             #  red
+grn=$(tput setaf 2)             #  green
+cya=$(tput setaf 6)             #  cyan
+txtbld=$(tput bold)             # Bold
+bldred=${txtbld}$(tput setaf 1) #  red
+bldgrn=${txtbld}$(tput setaf 2) #  green
+bldblu=${txtbld}$(tput setaf 4) #  blue
+bldcya=${txtbld}$(tput setaf 6) #  cyan
+txtrst=$(tput sgr0)             # Reset
+
+THREADS="16"
+DEVICE="$1"
+SYNC="$2"
+EXTRAS="$3"
+
+
+# we don't allow scrollback buffer
+echo -e '\0033\0143'
+# clear
+
+echo -e "${cya}Building ${bldcya} Carbon ROM project ${txtrst}";
+
+# setup environment
+echo -e "${bldblu}Setting up environment ${txtrst}"
+export USE_CCACHE=1
+export CCACHE_DIR=~/android/cache/.mahdi
+# set ccache due to your disk space,set it at your own risk
+prebuilts/misc/linux-x86/ccache/ccache -M 6G
+
+. build/envsetup.sh
+# add_lunch_combo carbon_codina-userdebug
+add_lunch_combo mahdi_codina-user
+export PATH=${PATH}:~/bin
+# export PATH=${PATH}:~/android-sdk/tools
+# export PATH=${PATH}:~/android-sdk/platform-tools
+
+
+# get time of startup
+res1=$(date +%s.%N)
+
+cd vendor/mahdi
+./get-prebuilts
+cd ../..
+
+echo -e "${bldblu}brunching device ${txtrst}"
+# brunch $DEVICE -j4
+# brunch mahdi_codina-user -j4
+lunch mahdi_codina-user
+mka bacon
+echo -e ""
+
+# finished? get elapsed time
+res2=$(date +%s.%N)
+echo "${bldgrn}Total time elapsed: ${txtrst}${grn}$(echo "($res2 - $res1) / 60"|bc ) minutes ($(echo "$res2 - $res1"|bc ) seconds) ${txtrst}"
+
+# make a alarm
+echo $'\a'
